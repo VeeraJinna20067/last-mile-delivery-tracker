@@ -7,7 +7,8 @@ import {
   updateAgentLocation,
   updateAgentAvailability,
   getAgentOrders,
-  getMyAgentProfile
+  getMyAgentProfile,
+  updateAgentOrderStatus
 } from "../controllers/agentController.js";
 
 import protect from "../middleware/authMiddleware.js";
@@ -81,6 +82,10 @@ router.get(
   authorize("agent"),
   getAgentOrders
 );
-
-
+router.put(
+  "/orders/:id/status",
+  protect,
+  authorize("agent"),
+  updateAgentOrderStatus
+);
 export default router;

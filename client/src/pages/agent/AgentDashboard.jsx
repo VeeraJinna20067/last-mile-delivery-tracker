@@ -118,9 +118,10 @@ const AgentDashboard = () => {
           );
 
 
-        setAgent(
-          response.data.agent
-        );
+     setAgent((currentAgent) => ({
+  ...currentAgent,
+  isAvailable: response.data.isAvailable
+}));
 
 
       } catch (error) {
@@ -156,6 +157,26 @@ const AgentDashboard = () => {
         order.status ===
         "DELIVERED"
     );
+    const assignedOrders =
+  orders.filter(
+    (order) =>
+      order.status === "ASSIGNED"
+  );
+
+const pickedUpOrders =
+  orders.filter(
+    (order) =>
+      order.status === "PICKED_UP"
+  );
+
+const inTransitOrders =
+  orders.filter(
+    (order) =>
+      [
+        "IN_TRANSIT",
+        "OUT_FOR_DELIVERY"
+      ].includes(order.status)
+  );
 
 
   const formatTime = (date) => {
@@ -195,13 +216,12 @@ const AgentDashboard = () => {
             DELIVERY WORKSPACE
           </div>
 
-          <h1 className="page-title">
-            Today's deliveries
-          </h1>
-
+         <h1 className="page-title">
+  Good morning, {agent?.name?.split(" ")[0] || "Agent"}
+</h1>
           <p className="page-subtitle">
-            Manage your assigned shipments and update delivery status.
-          </p>
+  Here are the deliveries currently assigned to you.
+</p>
 
         </div>
 
@@ -240,61 +260,84 @@ const AgentDashboard = () => {
       )}
 
 
-      <div className="agent-stats">
+     <div className="agent-stats">
 
-        <div className="agent-stat card">
+  <div className="agent-stat card">
 
-          <Package size={18} />
+    <div className="stat-icon">
+      <Package size={18} />
+    </div>
 
-          <div>
-            <span>
-              Active deliveries
-            </span>
+    <div>
+      <span>
+        Assigned
+      </span>
 
-            <strong>
-              {activeOrders.length}
-            </strong>
-          </div>
+      <strong>
+        {assignedOrders.length}
+      </strong>
+    </div>
 
-        </div>
-
-
-        <div className="agent-stat card">
-
-          <Clock3 size={18} />
-
-          <div>
-            <span>
-              Assigned today
-            </span>
-
-            <strong>
-              {orders.length}
-            </strong>
-          </div>
-
-        </div>
+  </div>
 
 
-        <div className="agent-stat card">
+  <div className="agent-stat card">
 
-          <CheckCircle2 size={18} />
+    <div className="stat-icon">
+      <MapPin size={18} />
+    </div>
 
-          <div>
-            <span>
-              Completed
-            </span>
+    <div>
+      <span>
+        Picked up
+      </span>
 
-            <strong>
-              {completedOrders.length}
-            </strong>
-          </div>
+      <strong>
+        {pickedUpOrders.length}
+      </strong>
+    </div>
 
-        </div>
-
-      </div>
+  </div>
 
 
+  <div className="agent-stat card">
+
+    <div className="stat-icon">
+      <Clock3 size={18} />
+    </div>
+
+    <div>
+      <span>
+        In transit
+      </span>
+
+      <strong>
+        {inTransitOrders.length}
+      </strong>
+    </div>
+
+  </div>
+
+
+  <div className="agent-stat card">
+
+    <div className="stat-icon">
+      <CheckCircle2 size={18} />
+    </div>
+
+    <div>
+      <span>
+        Delivered
+      </span>
+
+      <strong>
+        {completedOrders.length}
+      </strong>
+    </div>
+
+  </div>
+
+</div>
       <section className="agent-section">
 
         <div className="section-heading">
@@ -393,24 +436,30 @@ const AgentDashboard = () => {
                   </div>
 
 
-                  <div className="agent-order-status">
+                 <div className="agent-order-status">
 
-                    <span
-                      className={`status-badge status-${order.status
-                        ?.toLowerCase()
-                        .replaceAll(
-                          "_",
-                          "-"
-                        )}`}
-                    >
-                      {order.status
-                        ?.replaceAll(
-                          "_",
-                          " "
-                        )}
-                    </span>
+  <div className="agent-order-meta">
 
-                  </div>
+    <span>
+      {order.orderType}
+    </span>
+
+    <span>
+      {order.paymentType}
+    </span>
+
+  </div>
+
+  <span
+    className={`status-badge status-${order.status
+      ?.toLowerCase()
+      .replaceAll("_", "-")}`}
+  >
+    {order.status
+      ?.replaceAll("_", " ")}
+  </span>
+
+</div>
 
                 </Link>
 

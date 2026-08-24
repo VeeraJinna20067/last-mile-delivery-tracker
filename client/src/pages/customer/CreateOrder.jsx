@@ -103,69 +103,184 @@ const CreateOrder = () => {
     }
   };
 
-  const createOrder = async () => {
-    setError("");
+ const createOrder = async () => {
 
-    if (!calculation) {
+  setError("");
+
+  if (!calculation) {
+    setError(
+      "Calculate the delivery price first."
+    );
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    setError(
+      "Location services are not supported by this browser."
+    );
+    return;
+  }
+
+  try {
+
+    setCreating(true);
+
+    // --------------------------------
+    // Get current pickup location
+    // --------------------------------
+
+    const position =
+      await new Promise(
+        (resolve, reject) => {
+
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            }
+          );
+
+        }
+      );
+
+
+    const pickupLatitude =
+      position.coords.latitude;
+
+    const pickupLongitude =
+      position.coords.longitude;
+
+
+    console.log(
+      "Pickup latitude:",
+      pickupLatitude
+    );
+
+    console.log(
+      "Pickup longitude:",
+      pickupLongitude
+    );
+
+
+    // --------------------------------
+    // Create order
+    // --------------------------------
+
+    const response =
+      await api.post(
+        "/orders",
+        {
+          pickupAddress:
+            form.pickupAddress,
+
+          dropAddress:
+            form.dropAddress,
+
+          pickupPincode:
+            form.pickupPincode,
+
+          dropPincode:
+            form.dropPincode,
+
+          pickupLatitude:
+            pickupLatitude,
+
+          pickupLongitude:
+            pickupLongitude,
+
+          length:
+            Number(form.length),
+
+          breadth:
+            Number(form.breadth),
+
+          height:
+            Number(form.height),
+
+          actualWeight:
+            Number(form.actualWeight),
+
+          orderType:
+            form.orderType,
+
+          paymentType:
+            form.paymentType
+        }
+      );
+
+
+    console.log(
+      "Order created:",
+      response.data
+    );
+
+
+    navigate(
+      `/orders/${response.data.order._id}`
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Create order error:",
+      error
+    );
+
+
+    // --------------------------------
+    // Location errors
+    // --------------------------------
+
+    if (error?.code === 1) {
+
       setError(
-        "Calculate the delivery price first."
+        "Location permission was denied. Please allow location access and try again."
       );
 
       return;
     }
 
-    try {
-      setCreating(true);
 
-      const response =
-        await api.post(
-          "/orders",
-          {
-            pickupAddress:
-              form.pickupAddress,
+    if (error?.code === 2) {
 
-            dropAddress:
-              form.dropAddress,
-
-            pickupPincode:
-              form.pickupPincode,
-
-            dropPincode:
-              form.dropPincode,
-
-            length:
-              Number(form.length),
-
-            breadth:
-              Number(form.breadth),
-
-            height:
-              Number(form.height),
-
-            actualWeight:
-              Number(form.actualWeight),
-
-            orderType:
-              form.orderType,
-
-            paymentType:
-              form.paymentType
-          }
-        );
-
-      navigate(
-        `/orders/${response.data.order._id}`
-      );
-
-    } catch (error) {
       setError(
-        error.response?.data?.message ||
-        "Unable to create order"
+        "Unable to determine your current location."
       );
-    } finally {
-      setCreating(false);
+
+      return;
     }
-  };
+
+
+    if (error?.code === 3) {
+
+      setError(
+        "Location request timed out. Please try again."
+      );
+
+      return;
+    }
+
+
+    // --------------------------------
+    // Backend error
+    // --------------------------------
+
+    setError(
+      error.response?.data?.message ||
+      "Unable to create order"
+    );
+
+  } finally {
+
+    setCreating(false);
+
+  }
+
+};
 
   return (
     <div className="order-page">

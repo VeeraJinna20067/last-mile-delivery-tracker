@@ -25,8 +25,8 @@ import RescheduleOrder from "./pages/customer/RescheduleOrder.jsx";
 
 import AgentDashboard from "./pages/agent/AgentDashboard.jsx";
 import AgentOrderDetails from "./pages/agent/AgentOrderDetails.jsx";
-
-
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+// import Agents from "./pages/admin/Agents.jsx";
 const App = () => {
 
   return (
@@ -158,6 +158,29 @@ const App = () => {
               />
 
             </Route>
+            <Route
+  element={
+    <ProtectedRoute
+      allowedRoles={[
+        "admin"
+      ]}
+    />
+  }
+>
+  <Route
+    element={
+      <DashboardLayout />
+    }
+  >
+    <Route
+      path="/admin"
+      element={
+        <AdminDashboard />
+      }
+    />
+    
+  </Route>
+</Route>
 
           </Route>
 

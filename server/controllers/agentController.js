@@ -374,7 +374,143 @@ export const getAgentOrders = async (
     });
   }
 };
+// -----------------------------------------
+// UPDATE AGENT ORDER STATUS
+// -----------------------------------------
 
+export const updateAgentOrderStatus = async (
+  req,
+  res
+) => {
+  try {
+
+    const { status } = req.body;
+
+    const allowedStatuses = [
+      "PICKED_UP",
+      "IN_TRANSIT",
+      "OUT_FOR_DELIVERY",
+      "DELIVERED"
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid delivery status"
+      });
+    }
+
+
+    const order = await Order.findOne({
+      _id: req.params.id,
+      agentId: req.user.userId
+    });
+
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Order not found or not assigned to you"
+      });
+    }
+
+
+    // -----------------------------------------
+    // Validate status transition
+    // -----------------------------------------
+
+    const validTransitions = {
+      ASSIGNED: "PICKED_UP",
+      PICKED_UP: "IN_TRANSIT",
+      IN_TRANSIT: "OUT_FOR_DELIVERY",
+      OUT_FOR_DELIVERY: "DELIVERED"
+    };
+
+
+    const nextStatus =
+      validTransitions[order.status];
+
+
+    if (nextStatus !== status) {
+      return res.status(400).json({
+        success: false,
+        message:
+          `Cannot move order from ${order.status} to ${status}`
+      });
+    }
+
+
+    // -----------------------------------------
+    // Update order
+    // -----------------------------------------
+
+    order.status = status;
+
+    await order.save();
+
+
+    // -----------------------------------------
+    // Add tracking event
+    // -----------------------------------------
+
+    await addTrackingEvent({
+      orderId: order._id,
+      status,
+      actorId: req.user.userId,
+      actorRole: "agent",
+      remarks:
+        `Order status updated to ${status} by agent`
+    });
+
+
+    // -----------------------------------------
+    // Return latest order
+    // -----------------------------------------
+
+    const updatedOrder =
+      await Order.findById(order._id)
+        .populate(
+          "customerId",
+          "name email phone"
+        )
+        .populate(
+          "pickupZone",
+          "name code"
+        )
+        .populate(
+          "dropZone",
+          "name code"
+        )
+        .populate(
+          "agentId",
+          "name email phone currentLocation"
+        );
+
+
+    res.status(200).json({
+      success: true,
+      message:
+        "Order status updated successfully",
+      order: updatedOrder
+    });
+
+
+  } catch (error) {
+
+    console.error(
+      "Update agent order status error:",
+      error
+    );
+
+    res.status(500).json({
+      success: false,
+      message:
+        "Failed to update order status"
+    });
+
+  }
+};
 // -----------------------------------------
 // GET MY AGENT PROFILE
 // -----------------------------------------

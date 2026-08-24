@@ -43,7 +43,8 @@ export const createOrder = async (req, res) => {
       dropAddress,
       pickupPincode,
       dropPincode,
-
+        pickupLatitude,
+  pickupLongitude,
       length,
       breadth,
       height,
@@ -66,6 +67,8 @@ export const createOrder = async (req, res) => {
       length === undefined ||
       breadth === undefined ||
       height === undefined ||
+      pickupLatitude === undefined ||
+pickupLongitude === undefined ||
       actualWeight === undefined ||
       !orderType ||
       !paymentType
@@ -112,6 +115,10 @@ export const createOrder = async (req, res) => {
       customerId: req.user.userId,
 
       pickupAddress,
+      pickupLocation: {
+  latitude: Number(pickupLatitude),
+  longitude: Number(pickupLongitude)
+},
       dropAddress,
 
       pickupPincode,
@@ -170,6 +177,72 @@ export const createOrder = async (req, res) => {
 
       remarks: "Order created successfully"
     });
+    // -----------------------------------------
+// Automatically assign nearest agent
+// -----------------------------------------
+
+let assignment = null;
+
+try {
+
+  assignment = await assignNearestAgent({
+    orderId: order._id,
+
+    pickupLatitude:
+      Number(pickupLatitude),
+
+    pickupLongitude:
+      Number(pickupLongitude),
+
+    actorId:
+      req.user.userId,
+
+    actorRole:
+      req.user.role
+  });
+
+  console.log(
+    "Nearest agent assigned:",
+    assignment.agent.name
+  );
+
+  console.log(
+    "Distance:",
+    assignment.distance,
+    "km"
+  );
+   // -----------------------------------------
+// Notify customer about agent assignment
+// -----------------------------------------
+
+try {
+
+  await notifyCustomer({
+
+    order: assignment.order,
+
+    type: "AGENT_ASSIGNED",
+
+    message:
+      `Agent ${assignment.agent.name} has been assigned to your order ${order.orderNumber}.`
+
+  });
+
+} catch (notificationError) {
+
+  console.error(
+    "Agent assignment notification failed:",
+    notificationError.message
+  );
+}
+} catch (assignmentError) {
+
+  console.log(
+    "Automatic agent assignment skipped:",
+    assignmentError.message
+  );
+
+}
     await notifyCustomer({
   order,
 
@@ -197,17 +270,31 @@ export const createOrder = async (req, res) => {
           "dropZone",
           "name code"
         );
+   const updatedOrder =
+  await Order.findById(order._id)
+    .populate(
+      "customerId",
+      "name email phone"
+    )
+    .populate(
+      "pickupZone",
+      "name code"
+    )
+    .populate(
+      "dropZone",
+      "name code"
+    )
+    .populate(
+      "agentId",
+      "name email phone currentLocation"
+    );
+    return res.status(201).json({
+  success: true,
+  message: "Order created successfully",
+  order: updatedOrder
+});
 
-
-    res.status(201).json({
-      success: true,
-
-      message:
-        "Order created successfully",
-
-      order: populatedOrder
-    });
-
+    
   } catch (error) {
 
     console.error(

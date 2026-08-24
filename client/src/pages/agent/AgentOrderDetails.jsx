@@ -136,45 +136,41 @@ const AgentOrderDetails = () => {
 
 
   const updateStatus =
-    async (status) => {
+  async (status) => {
 
-      try {
+    try {
 
-        setUpdating(true);
+      setUpdating(true);
 
-        setError("");
+      setError("");
 
+      await api.put(
+        `/agents/orders/${id}/status`,
+        {
+          status
+        }
+      );
 
-        await api.put(
-          `/tracking/orders/${id}/status`,
-          {
-            status,
-            remarks:
-              `Delivery status updated to ${status.replaceAll(
-                "_",
-                " "
-              )}`
-          }
-        );
+      await fetchOrder();
 
+    } catch (error) {
 
-        await fetchOrder();
+      console.error(
+        "Update delivery status error:",
+        error
+      );
 
+      setError(
+        error.response?.data?.message ||
+        "Unable to update delivery status"
+      );
 
-      } catch (error) {
+    } finally {
 
-        setError(
-          error.response?.data?.message ||
-          "Unable to update delivery status"
-        );
+      setUpdating(false);
 
-      } finally {
-
-        setUpdating(false);
-
-      }
-    };
-
+    }
+  };
 
   const markFailed =
     async () => {

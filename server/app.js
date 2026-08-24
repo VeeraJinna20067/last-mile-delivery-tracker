@@ -11,7 +11,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import agentRoutes from "./routes/agentRoutes.js";
 import trackingRoutes from "./routes/trackingRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
-
+import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 
@@ -107,6 +107,6 @@ app.use(
   "/api/notifications",
   notificationRoutes
 );
-
+app.use("/api/admin", adminRoutes);
 
 export default app;
