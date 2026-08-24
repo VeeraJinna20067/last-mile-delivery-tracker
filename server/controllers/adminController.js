@@ -1,10 +1,6 @@
 import User from "../models/User.js";
 import Order from "../models/Order.js";
 
-// -----------------------------------------
-// ADMIN DASHBOARD
-// -----------------------------------------
-
 export const getAdminDashboard = async (req, res) => {
   try {
 
@@ -22,10 +18,6 @@ export const getAdminDashboard = async (req, res) => {
       totalAgents,
       availableAgents
     ] = await Promise.all([
-
-      // -------------------------------
-      // ORDERS
-      // -------------------------------
 
       Order.countDocuments(),
 
@@ -61,10 +53,6 @@ export const getAdminDashboard = async (req, res) => {
         status: "RESCHEDULED"
       }),
 
-      // -------------------------------
-      // USERS
-      // -------------------------------
-
       User.countDocuments({
         role: "customer"
       }),
@@ -90,37 +78,21 @@ export const getAdminDashboard = async (req, res) => {
 
         totalOrders,
 
-        orderStatus: {
-
+        orders: {
           created: createdOrders,
-
           assigned: assignedOrders,
-
           pickedUp: pickedUpOrders,
-
           inTransit: inTransitOrders,
-
-          outForDelivery:
-            outForDeliveryOrders,
-
-          delivered:
-            deliveredOrders,
-
+          outForDelivery: outForDeliveryOrders,
+          delivered: deliveredOrders,
           failed: failedOrders,
-
-          rescheduled:
-            rescheduledOrders
-
+          rescheduled: rescheduledOrders
         },
 
         users: {
-
           totalCustomers,
-
           totalAgents,
-
           availableAgents
-
         }
 
       }
@@ -135,43 +107,42 @@ export const getAdminDashboard = async (req, res) => {
     );
 
     res.status(500).json({
-
       success: false,
-
-      message:
-        "Failed to load admin dashboard"
-
+      message: "Failed to load admin dashboard"
     });
 
   }
 };
-// -----------------------------------------
-// GET ALL ORDERS - ADMIN
-// -----------------------------------------
 
 export const getAllOrders = async (req, res) => {
   try {
 
     const orders = await Order.find()
+
       .populate(
         "customerId",
         "name email phone"
       )
+
       .populate(
         "agentId",
         "name email phone"
       )
+
       .populate(
         "pickupZone",
         "name code"
       )
+
       .populate(
         "dropZone",
         "name code"
       )
+
       .sort({
         createdAt: -1
       });
+
 
     res.status(200).json({
       success: true,
@@ -188,7 +159,60 @@ export const getAllOrders = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Failed to fetch orders"
+      message:
+        "Failed to fetch orders"
+    });
+
+  }
+};
+export const getAdminOrderDetails = async (req, res) => {
+  try {
+
+    const order = await Order.findById(
+      req.params.id
+    )
+      .populate(
+        "customerId",
+        "name email phone"
+      )
+      .populate(
+        "agentId",
+        "name email phone currentLocation isAvailable"
+      )
+      .populate(
+        "pickupZone",
+        "name code"
+      )
+      .populate(
+        "dropZone",
+        "name code"
+      );
+
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+
+    res.status(200).json({
+      success: true,
+      order
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Get admin order details error:",
+      error
+    );
+
+    res.status(500).json({
+      success: false,
+      message:
+        "Failed to fetch order details"
     });
 
   }

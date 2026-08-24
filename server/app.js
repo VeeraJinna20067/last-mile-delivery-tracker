@@ -13,6 +13,7 @@ import trackingRoutes from "./routes/trackingRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
+
 const app = express();
 
 
@@ -108,5 +109,6 @@ app.use(
   notificationRoutes
 );
 app.use("/api/admin", adminRoutes);
+
 
 export default app;

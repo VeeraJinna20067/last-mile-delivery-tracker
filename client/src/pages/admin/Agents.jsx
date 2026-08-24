@@ -2,10 +2,15 @@ import {
   useEffect,
   useState
 } from "react";
-
 import {
   UserPlus,
+  X
+} from "lucide-react";
+import {
+  Users,
   MapPin,
+  Phone,
+  Mail,
   Circle
 } from "lucide-react";
 
@@ -23,30 +28,27 @@ const Agents = () => {
   const [error, setError] =
     useState("");
 
-  const [showForm, setShowForm] =
-    useState(false);
+const [showCreateForm, setShowCreateForm] =
+  useState(false);
 
-  const [creating, setCreating] =
-    useState(false);
+const [form, setForm] = useState({
+  name: "",
+  email: "",
+  phone: "",
+  password: "",
+  latitude: "",
+  longitude: ""
+});
 
-  const [form, setForm] =
-    useState({
-      name: "",
-      email: "",
-      phone: "",
-      password: "",
-      latitude: "",
-      longitude: ""
-    });
-
-
+const [creating, setCreating] =
+  useState(false);
   useEffect(() => {
 
     fetchAgents();
 
   }, []);
 
-
+ 
   const fetchAgents = async () => {
 
     try {
@@ -54,7 +56,9 @@ const Agents = () => {
       setLoading(true);
 
       const response =
-        await api.get("/agents");
+        await api.get(
+          "/agents"
+        );
 
       setAgents(
         response.data.agents || []
@@ -77,82 +81,56 @@ const Agents = () => {
       setLoading(false);
 
     }
-  };
-
-
-  const handleChange = (event) => {
-
-    const {
-      name,
-      value
-    } = event.target;
-
-    setForm((current) => ({
-      ...current,
-      [name]: value
-    }));
 
   };
 
+   const handleCreateAgent = async (event) => {
 
-  const createAgent = async (event) => {
+  event.preventDefault();
 
-    event.preventDefault();
+  try {
 
-    try {
+    setCreating(true);
+    setError("");
 
-      setCreating(true);
+    await api.post(
+      "/agents",
+      {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+        latitude: Number(form.latitude),
+        longitude: Number(form.longitude)
+      }
+    );
 
-      setError("");
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      latitude: "",
+      longitude: ""
+    });
 
-      await api.post(
-        "/agents",
-        {
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          password: form.password,
-          latitude:
-            Number(form.latitude),
-          longitude:
-            Number(form.longitude)
-        }
-      );
+    setShowCreateForm(false);
 
+    await fetchAgents();
 
-      setForm({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        latitude: "",
-        longitude: ""
-      });
+  } catch (error) {
 
-      setShowForm(false);
+    setError(
+      error.response?.data?.message ||
+      "Unable to create agent"
+    );
 
-      await fetchAgents();
+  } finally {
 
-    } catch (error) {
+    setCreating(false);
 
-      console.error(
-        "Create agent error:",
-        error
-      );
-
-      setError(
-        error.response?.data?.message ||
-        "Unable to create agent"
-      );
-
-    } finally {
-
-      setCreating(false);
-
-    }
-  };
-
-
+  }
+};
   if (loading) {
 
     return (
@@ -167,9 +145,7 @@ const Agents = () => {
   return (
     <div>
 
-      {/* -------------------------------- */}
       {/* HEADER */}
-      {/* -------------------------------- */}
 
       <div className="page-header">
 
@@ -180,38 +156,236 @@ const Agents = () => {
           </div>
 
           <h1 className="page-title">
-            Agents
+            Delivery Agents
           </h1>
 
           <p className="page-subtitle">
-            Manage delivery agents and their availability.
+            Monitor your delivery agents and their availability.
           </p>
 
         </div>
+ {showCreateForm && (
+
+  <div className="card admin-create-agent">
+
+    <div className="admin-create-header">
+
+      <div>
+        <h2>
+          Create delivery agent
+        </h2>
+
+        <p>
+          Create an account for a new delivery agent.
+        </p>
+      </div>
+
+      <button
+        className="icon-button"
+        onClick={() =>
+          setShowCreateForm(false)
+        }
+      >
+        <X size={17} />
+      </button>
+
+    </div>
 
 
-        <button
-          className="btn btn-primary"
-          onClick={() =>
-            setShowForm(
-              !showForm
-            )
+    <form
+      className="admin-agent-form"
+      onSubmit={handleCreateAgent}
+    >
+
+      <div className="form-group">
+
+        <label>
+          Full name
+        </label>
+
+        <input
+          className="form-input"
+          value={form.name}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              name: e.target.value
+            })
           }
-        >
-          <UserPlus size={16} />
-
-          {showForm
-            ? "Close"
-            : "Add agent"}
-
-        </button>
+          required
+        />
 
       </div>
 
 
-      {/* -------------------------------- */}
+      <div className="form-group">
+
+        <label>
+          Email
+        </label>
+
+        <input
+          className="form-input"
+          type="email"
+          value={form.email}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              email: e.target.value
+            })
+          }
+          required
+        />
+
+      </div>
+
+
+      <div className="form-group">
+
+        <label>
+          Phone
+        </label>
+
+        <input
+          className="form-input"
+          value={form.phone}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              phone: e.target.value
+            })
+          }
+          required
+        />
+
+      </div>
+
+
+      <div className="form-group">
+
+        <label>
+          Temporary password
+        </label>
+
+        <input
+          className="form-input"
+          type="password"
+          value={form.password}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              password: e.target.value
+            })
+          }
+          minLength={6}
+          required
+        />
+
+      </div>
+
+
+      <div className="form-group">
+
+        <label>
+          Latitude
+        </label>
+
+        <input
+          className="form-input"
+          type="number"
+          step="any"
+          value={form.latitude}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              latitude: e.target.value
+            })
+          }
+          required
+        />
+
+      </div>
+
+
+      <div className="form-group">
+
+        <label>
+          Longitude
+        </label>
+
+        <input
+          className="form-input"
+          type="number"
+          step="any"
+          value={form.longitude}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              longitude: e.target.value
+            })
+          }
+          required
+        />
+
+      </div>
+
+
+      <div className="admin-form-actions">
+
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() =>
+            setShowCreateForm(false)
+          }
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={creating}
+        >
+          {creating
+            ? "Creating..."
+            : "Create agent"}
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+)}
+
+        <div className="admin-agent-actions">
+
+  <div className="admin-agent-count">
+    <Users size={17} />
+
+    <span>
+      {agents.length} agents
+    </span>
+  </div>
+
+  <button
+    className="btn btn-primary"
+    onClick={() =>
+      setShowCreateForm(true)
+    }
+  >
+    <UserPlus size={16} />
+    Create agent
+  </button>
+
+</div>
+
+      </div>
+
+
       {/* ERROR */}
-      {/* -------------------------------- */}
 
       {error && (
 
@@ -222,313 +396,186 @@ const Agents = () => {
       )}
 
 
-      {/* -------------------------------- */}
-      {/* CREATE AGENT FORM */}
-      {/* -------------------------------- */}
-
-      {showForm && (
-
-        <form
-          className="admin-agent-form card"
-          onSubmit={
-            createAgent
-          }
-        >
-
-          <div className="section-heading">
-
-            <div>
-
-              <h2>
-                Create agent
-              </h2>
-
-              <p>
-                Add a delivery agent with their current location.
-              </p>
-
-            </div>
-
-          </div>
-
-
-          <div className="admin-form-grid">
-
-            <div className="form-field">
-
-              <label>
-                Name
-              </label>
-
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={
-                  handleChange
-                }
-                placeholder="Agent name"
-                required
-              />
-
-            </div>
-
-
-            <div className="form-field">
-
-              <label>
-                Email
-              </label>
-
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={
-                  handleChange
-                }
-                placeholder="agent@example.com"
-                required
-              />
-
-            </div>
-
-
-            <div className="form-field">
-
-              <label>
-                Phone
-              </label>
-
-              <input
-                type="text"
-                name="phone"
-                value={form.phone}
-                onChange={
-                  handleChange
-                }
-                placeholder="Phone number"
-                required
-              />
-
-            </div>
-
-
-            <div className="form-field">
-
-              <label>
-                Password
-              </label>
-
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={
-                  handleChange
-                }
-                placeholder="Minimum 6 characters"
-                required
-              />
-
-            </div>
-
-
-            <div className="form-field">
-
-              <label>
-                Latitude
-              </label>
-
-              <input
-                type="number"
-                step="any"
-                name="latitude"
-                value={form.latitude}
-                onChange={
-                  handleChange
-                }
-                placeholder="16.5062"
-                required
-              />
-
-            </div>
-
-
-            <div className="form-field">
-
-              <label>
-                Longitude
-              </label>
-
-              <input
-                type="number"
-                step="any"
-                name="longitude"
-                value={form.longitude}
-                onChange={
-                  handleChange
-                }
-                placeholder="80.6480"
-                required
-              />
-
-            </div>
-
-          </div>
-
-
-          <div className="admin-form-actions">
-
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() =>
-                setShowForm(false)
-              }
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={creating}
-            >
-              {creating
-                ? "Creating..."
-                : "Create agent"}
-            </button>
-
-          </div>
-
-        </form>
-
-      )}
-
-
-      {/* -------------------------------- */}
       {/* AGENT LIST */}
-      {/* -------------------------------- */}
 
-      <section className="admin-section">
+      {agents.length === 0 ? (
 
-        <div className="section-heading">
+        <div className="empty-state card">
 
-          <div>
+          <Users size={25} />
 
-            <h2>
-              Delivery agents
-            </h2>
+          <h3>
+            No agents found
+          </h3>
 
-            <p>
-              {agents.length} agents registered in the system.
-            </p>
-
-          </div>
+          <p>
+            Create an agent to start assigning deliveries.
+          </p>
 
         </div>
 
+      ) : (
 
-        {agents.length === 0 ? (
+        <div className="admin-agent-grid">
 
-          <div className="empty-state card">
+          {agents.map(
+            (agent) => (
 
-            <UserPlus size={25} />
+              <div
+                key={agent._id}
+                className="admin-agent-card card"
+              >
 
-            <h3>
-              No agents yet
-            </h3>
+                {/* TOP */}
 
-            <p>
-              Create your first delivery agent.
-            </p>
+                <div className="admin-agent-top">
 
-          </div>
+                  <div className="admin-agent-avatar">
 
-        ) : (
-
-          <div className="admin-agent-list">
-
-            {agents.map(
-              (agent) => (
-
-                <div
-                  key={agent._id}
-                  className="admin-agent-card card"
-                >
-
-                  <div className="admin-agent-main">
-
-                    <div className="admin-agent-avatar">
-                      {agent.name
-                        ?.charAt(0)
-                        ?.toUpperCase()}
-                    </div>
-
-                    <div>
-
-                      <strong>
-                        {agent.name}
-                      </strong>
-
-                      <span>
-                        {agent.email}
-                      </span>
-
-                      <span>
-                        {agent.phone}
-                      </span>
-
-                    </div>
+                    {agent.name
+                      ?.charAt(0)
+                      .toUpperCase()}
 
                   </div>
 
 
-                  <div className="admin-agent-location">
+                  <div className="admin-agent-name">
 
-                    <MapPin size={15} />
+                    <strong>
+                      {agent.name}
+                    </strong>
 
                     <span>
-                      {agent.currentLocation?.latitude
-                        ?? "—"}
-                      {", "}
-                      {agent.currentLocation?.longitude
-                        ?? "—"}
+                      Delivery Agent
                     </span>
 
                   </div>
 
 
-                  <div className="admin-agent-status">
+                  <div
+                    className={
+                      agent.isAvailable
+                        ? "agent-live-status online"
+                        : "agent-live-status"
+                    }
+                  >
 
-                    <Circle
-                      size={9}
-                      fill={
-                        agent.isAvailable
-                          ? "currentColor"
-                          : "none"
-                      }
-                    />
+                    <Circle size={8} />
+
+                    {agent.isAvailable
+                      ? "Available"
+                      : "Busy"}
+
+                  </div>
+
+                </div>
+
+
+                {/* CONTACT */}
+
+                <div className="admin-agent-info">
+
+                  <div>
+
+                    <Mail size={14} />
 
                     <span>
-                      {agent.isAvailable
-                        ? "Available"
-                        : "Unavailable"}
+                      {agent.email}
+                    </span>
+
+                  </div>
+
+
+                  <div>
+
+                    <Phone size={14} />
+
+                    <span>
+                      {agent.phone}
+                    </span>
+
+                  </div>
+
+
+                  <div>
+
+                    <MapPin size={14} />
+
+                    <span>
+
+                      {agent.currentLocation?.latitude !== null &&
+                      agent.currentLocation?.longitude !== null
+                        ? `${agent.currentLocation.latitude}, ${agent.currentLocation.longitude}`
+                        : "Location unavailable"}
+
                     </span>
 
                   </div>
 
                 </div>
 
-              )
-            )}
 
-          </div>
+                {/* FOOTER */}
 
-        )}
+               <div className="admin-agent-footer">
 
-      </section>
+  <div className="agent-order-stats">
+
+    <div>
+      <span>
+        Active
+      </span>
+
+      <strong>
+        {agent.orderStats?.activeOrders ?? 0}
+      </strong>
+    </div>
+
+    <div>
+      <span>
+        Completed
+      </span>
+
+      <strong>
+        {agent.orderStats?.completedOrders ?? 0}
+      </strong>
+    </div>
+
+    <div>
+      <span>
+        Total
+      </span>
+
+      <strong>
+        {agent.orderStats?.totalOrders ?? 0}
+      </strong>
+    </div>
+
+  </div>
+
+
+  <strong
+    className={
+      agent.isActive
+        ? "agent-active"
+        : "agent-inactive"
+    }
+  >
+    {agent.isActive
+      ? "Active"
+      : "Inactive"}
+  </strong>
+
+</div>
+
+              </div>
+
+            )
+          )}
+
+        </div>
+
+      )}
 
     </div>
   );

@@ -107,7 +107,6 @@ export const createAgent = async (req, res) => {
 // -----------------------------------------
 // GET ALL AGENTS
 // -----------------------------------------
-
 export const getAgents = async (req, res) => {
   try {
 
@@ -117,13 +116,120 @@ export const getAgents = async (req, res) => {
       .select("-password")
       .sort({
         createdAt: -1
-      });
+      })
+      .lean();
+
+
+    const agentIds = agents.map(
+      (agent) => agent._id
+    );
+
+
+    const orderCounts = await Order.aggregate([
+      {
+        $match: {
+          agentId: {
+            $in: agentIds
+          }
+        }
+      },
+
+      {
+        $group: {
+          _id: "$agentId",
+
+          totalOrders: {
+            $sum: 1
+          },
+
+          activeOrders: {
+            $sum: {
+              $cond: [
+                {
+                  $in: [
+                    "$status",
+                    [
+                      "ASSIGNED",
+                      "PICKED_UP",
+                      "IN_TRANSIT",
+                      "OUT_FOR_DELIVERY",
+                      "RESCHEDULED"
+                    ]
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          },
+
+          completedOrders: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: [
+                    "$status",
+                    "DELIVERED"
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+
+    const countMap = new Map();
+
+    orderCounts.forEach((item) => {
+
+      countMap.set(
+        item._id.toString(),
+        {
+          totalOrders:
+            item.totalOrders,
+
+          activeOrders:
+            item.activeOrders,
+
+          completedOrders:
+            item.completedOrders
+        }
+      );
+
+    });
+
+
+    const result = agents.map(
+      (agent) => {
+
+        const counts =
+          countMap.get(
+            agent._id.toString()
+          ) || {
+            totalOrders: 0,
+            activeOrders: 0,
+            completedOrders: 0
+          };
+
+
+        return {
+          ...agent,
+
+          orderStats: counts
+        };
+
+      }
+    );
 
 
     res.status(200).json({
       success: true,
-      count: agents.length,
-      agents
+      count: result.length,
+      agents: result
     });
 
   } catch (error) {
@@ -135,8 +241,10 @@ export const getAgents = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Failed to fetch agents"
+      message:
+        "Failed to fetch agents"
     });
+
   }
 };
 

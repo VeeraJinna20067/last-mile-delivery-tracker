@@ -9,32 +9,64 @@ import {
   AuthProvider
 } from "./context/AuthContext.jsx";
 
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import ProtectedRoute
+  from "./components/ProtectedRoute.jsx";
 
-import AuthLayout from "./layouts/AuthLayout.jsx";
-import DashboardLayout from "./layouts/DashboardLayout.jsx";
+import AuthLayout
+  from "./layouts/AuthLayout.jsx";
 
-import Login from "./pages/auth/Login.jsx";
-import Register from "./pages/auth/Register.jsx";
+import DashboardLayout
+  from "./layouts/DashboardLayout.jsx";
 
-import CustomerDashboard from "./pages/customer/CustomerDashboard.jsx";
-import CreateOrder from "./pages/customer/CreateOrder.jsx";
-import Orders from "./pages/customer/Orders.jsx";
-import OrderDetails from "./pages/customer/OrderDetails.jsx";
-import RescheduleOrder from "./pages/customer/RescheduleOrder.jsx";
+import Login
+  from "./pages/auth/Login.jsx";
 
-import AgentDashboard from "./pages/agent/AgentDashboard.jsx";
-import AgentOrderDetails from "./pages/agent/AgentOrderDetails.jsx";
-import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
-// import Agents from "./pages/admin/Agents.jsx";
+import Register
+  from "./pages/auth/Register.jsx";
+
+import CustomerDashboard
+  from "./pages/customer/CustomerDashboard.jsx";
+
+import CreateOrder
+  from "./pages/customer/CreateOrder.jsx";
+
+import Orders
+  from "./pages/customer/Orders.jsx";
+
+import OrderDetails
+  from "./pages/customer/OrderDetails.jsx";
+
+import RescheduleOrder
+  from "./pages/customer/RescheduleOrder.jsx";
+
+import AgentDashboard
+  from "./pages/agent/AgentDashboard.jsx";
+
+import AgentOrderDetails
+  from "./pages/agent/AgentOrderDetails.jsx";
+
+import AdminDashboard
+  from "./pages/admin/AdminDashboard.jsx";
+import Agents
+  from "./pages/admin/Agents.jsx";
+import AdminOrders
+  from "./pages/admin/Orders.jsx";
+import AdminOrderDetails
+  from "./pages/admin/OrderDetails.jsx";
+import AdminZones
+  from "./pages/admin/Zones.jsx";
+import AdminRates
+  from "./pages/admin/Rates.jsx";
 const App = () => {
 
   return (
+
     <AuthProvider>
 
       <BrowserRouter>
 
         <Routes>
+
 
           {/* =========================
               AUTH ROUTES
@@ -158,29 +190,68 @@ const App = () => {
               />
 
             </Route>
+
+          </Route>
+
+
+          {/* =========================
+              ADMIN ROUTES
+          ========================== */}
+
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "admin"
+                ]}
+              />
+            }
+          >
+
             <Route
+              element={
+                <DashboardLayout />
+              }
+            >
+
+              <Route
+                path="/admin"
+                element={
+                  <AdminDashboard />
+                }
+              />
+              <Route
+  path="/admin/agents"
   element={
-    <ProtectedRoute
-      allowedRoles={[
-        "admin"
-      ]}
-    />
+    <Agents />
   }
->
-  <Route
-    element={
-      <DashboardLayout />
-    }
-  >
-    <Route
-      path="/admin"
-      element={
-        <AdminDashboard />
-      }
-    />
-    
-  </Route>
-</Route>
+/>
+     <Route
+  path="/admin/orders"
+  element={
+    <AdminOrders />
+  }
+/>
+        <Route
+  path="/admin/orders/:id"
+  element={
+    <AdminOrderDetails />
+  }
+/>
+          <Route
+  path="/admin/zones"
+  element={
+    <AdminZones />
+  }
+/>
+             <Route
+  path="/admin/rates"
+  element={
+    <AdminRates />
+  }
+/>
+
+            </Route>
 
           </Route>
 
@@ -219,7 +290,9 @@ const App = () => {
       </BrowserRouter>
 
     </AuthProvider>
+
   );
+
 };
 
 
